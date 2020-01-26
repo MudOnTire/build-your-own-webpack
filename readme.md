@@ -30,7 +30,7 @@ module.exports = someObject;
 
 ## Dependency Graph（依赖关系图）
 
-一般项目需要一个入口文件（entry point），bundler从该入口文件进入，查找项目依赖的所有模块，形成一张依赖关系图，有了关系图bundler才能将所有模块打包成一个文件。
+一般项目需要一个入口文件（entry point），bundler从该入口文件进入，查找项目依赖的所有模块，形成一张依赖关系图，有了依赖关系图bundler进一步将所有模块打包成一个文件。
 
 **依赖关系图：**
 
