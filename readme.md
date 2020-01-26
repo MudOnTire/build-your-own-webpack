@@ -1,4 +1,4 @@
-# 从无到有实现简易版Webpack
+# 从零实现简易版Webpack
 
 # 什么是bundler
 
