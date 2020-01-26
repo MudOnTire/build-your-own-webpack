@@ -87,9 +87,9 @@ export const name = 'MudOnTire';
 
 ![greeting AST](http://lc-3Cv4Lgro.cn-n1.lcfile.com/12f64645e713a890931a/greeting%20ast2.png)
 
-可以看到抽象语法树其实是一个JSON对象，每个节点有一个 `type` 属性和 `import`、`export` 语句解析后的结果等等。可见将代码转成抽象语法树之后更方便提取里面的关键信息。
+可以看到抽象语法树其实是一个JSON对象，每个节点有一个 `type` 属性和 `import`、`export` 语句解析后的结果等等。将代码转成抽象语法树之后更方便提取里面的关键信息。
 
-接下来，我们需要在项目里面引入一个JS Parser。我们选择 [babylon](https://www.npmjs.com/package/babylon)（babylon也是babel的内部使用的JS parser，目前以 [@babel/parser](https://github.com/babel/babel/tree/master/packages/babel-parser)的身份存在于babel的主仓库）。
+接下来，我们需要在项目里面引入一个JS Parser。我们选择 [babylon](https://www.npmjs.com/package/babylon)（babylon也是babel的内部使用的JS parser，目前以 [@babel/parser](https://github.com/babel/babel/tree/master/packages/babel-parser) 的身份存在于babel的主仓库）。
 
 **安装babylon：**
 
@@ -97,7 +97,7 @@ export const name = 'MudOnTire';
 npm install --save-dev @babel/parser
 ```
 
-或者yarn：
+**或者yarn：**
 
 ```
 yarn add @babel/parser --dev
@@ -143,7 +143,7 @@ getAST('./example/greeting.js');
 
 ## 3. 依赖解析
 
-获取到JS源文件的抽象语法树后，我们便可以去查找代码中的依赖项，我们可以自己写查询方法递归的去查找，也可以使用 [@babel/traverse](https://babeljs.io/docs/en/babel-traverse) 进行查询，@babel/traverse 模块维护整个树的状态，并负责替换，删除和添加节点。
+生成抽象语法树后，便可以去查找代码中的依赖，我们可以自己写查询方法递归的去查找，也可以使用 [@babel/traverse](https://babeljs.io/docs/en/babel-traverse) 进行查询，@babel/traverse 模块维护整个树的状态，并负责替换，删除和添加节点。
 
 **安装 @babel/traverse：**
 
@@ -151,13 +151,13 @@ getAST('./example/greeting.js');
 npm install --save-dev @babel/traverse
 ```
 
-或者yarn：
+**或者yarn：**
 
 ```
 yarn add @babel/traverse --dev
 ```
 
-使用 `@babel/traverse` 就可以很方便的获取 `import` 节点了。
+使用 `@babel/traverse` 可以很方便的获取 `import` 节点。
 
 **bundler.js：**
 
@@ -183,7 +183,7 @@ getImports(ast);
 
 ![get imports](http://lc-3Cv4Lgro.cn-n1.lcfile.com/0b2763c08eaa7eb1155e/get%20imports.png)
 
-由此我们可以获得 `entry.js` 中 `import` 了那些模块和这些模块的路径。稍稍修改一下 `getImports` 方法获取所有的依赖：
+由此我们可以获得 `entry.js` 中依赖的模块和这些模块的路径。稍稍修改一下 `getImports` 方法获取所有的依赖：
 
 **bundler.js：**
 
@@ -204,7 +204,7 @@ function getImports(ast) {
 
 ![dependencies](http://lc-3Cv4Lgro.cn-n1.lcfile.com/3b1895c84840c2bc8dc3/dependencies.png)
 
-最后，我们将方法封装一下，为每个源文件生成唯一的依赖信息：
+最后，我们将方法封装一下，为每个源文件生成唯一的依赖信息，包含依赖模块的id、模块的相对路径和模块的依赖项：
 
 ```
 let ID = 0;
@@ -230,7 +230,7 @@ console.log(mainAsset);
 
 ## 4. 生成Dependency Graph
 
-接下来，我们需要写一个方法生成依赖关系图，该方法应该接受入口文件路径作为参数，并返回一个包含所有依赖关系的数组。生成依赖关系图可以通过递归的方式，也可以通过队列的方式。本文使用队列，原理是不断遍历队列中的asset对象，如果asset对象的dependencies不为空，则继续为每个dependency生成asset并加入队列，并为每个asset增加mapping属性，记录依赖之间的关系。持续这一过程直到queue中的元素被完全遍历。具体实现如下：
+然后，我们需要写一个方法生成依赖关系图，该方法应该接受入口文件路径作为参数，并返回一个包含所有依赖关系的数组。生成依赖关系图可以通过递归的方式，也可以通过队列的方式。本文使用队列，原理是不断遍历队列中的asset对象，如果asset对象的dependencies不为空，则继续为每个dependency生成asset并加入队列，并为每个asset增加mapping属性，记录依赖之间的关系。持续这一过程直到queue中的元素被完全遍历。具体实现如下：
 
 **bundler.js**
 
@@ -258,7 +258,7 @@ function createGraph(entry) {
 }
 ```
 
-生成的依赖关系图对象如下：
+生成的依赖关系如下：
 
 ![dependency graph](http://lc-3Cv4Lgro.cn-n1.lcfile.com/737e8dc5bfc60a90ab9e/dependency%20graph.png)
 
@@ -275,13 +275,13 @@ function createGraph(entry) {
 
 ### (1). 编译源码
 
-首先安装babel并引入；
+**首先安装babel并引入：**
 
 ```
 npm install --save-dev @babel/core
 ```
 
-或者yarn：
+**或者yarn：**
 
 ```
 yarn add @babel/core --dev
@@ -293,7 +293,7 @@ yarn add @babel/core --dev
 const babel = require('@babel/core');
 ```
 
-然后对 `getAsset` 方法稍作修改，这里我们使用 `transformFromAstSync()` 方法对生成的抽象语法树进行编译： 
+然后对 `getAsset` 方法稍作修改，这里我们使用 `babel.transformFromAstSync()` 方法对生成的抽象语法树进行编译，编译成浏览器可以执行的JS： 
 
 ```
 function getAsset(filename) {
@@ -317,11 +317,11 @@ function getAsset(filename) {
 
 ![compiled](http://lc-3Cv4Lgro.cn-n1.lcfile.com/90cb59c1044b4c3f9bbd/compiled.png)
 
-可以看到编译后的代码中还有 `require('./greeting.js')` 和 `exports["default"]` 这种语法，而浏览器中是不支持 `require`和 `exports` 方法的。所以我们还需要实现模块间的引用功能。
+可以看到编译后的代码中还有 `require('./greeting.js')` 语法，而浏览器中是不支持 `require()`方法的。所以我们还需要实现 `require()` 方法从而实现模块间的引用。
 
 **(2). 模块引用**
 
-首先打包之后的文件内容可以看成一大段字符串，且这段代码需要自己独立的作用域（使用IIFE包裹），以免污染其他JS文件。我们可以先勾勒出打包方法的结构，在**bundler.js**中新增 `bundle` 方法：
+首先打包之后的代码需要自己独立的作用域，以免污染其他JS文件，在此使用IIFE包裹。我们可以先勾勒出打包方法的结构，在**bundler.js**中新增 `bundle()` 方法：
 
 **bundler.js：**
 
@@ -336,7 +336,7 @@ function bundle(graph) {
   // 将依赖关系图中模块编译后的代码、模块路径和id的映射关系传入IIFE
   graph.forEach(mod => {
     modules += `${mod.id}:[
-      function () { ${mod.code}},
+      function (require, module, exports) { ${mod.code}},
       ${JSON.stringify(mod.mapping)}
     ],`
   })
@@ -352,7 +352,7 @@ function bundle(graph) {
 
 ![bundled](http://lc-3Cv4Lgro.cn-n1.lcfile.com/9234f4de1df1d65efafb/bundled.png)
 
-接着，我们需要实现模块之间的引用，我们需要手动实现 `require()` 方法。实现思路是：当调用 `require('./greeting.js')` 时，去mapping里面查找 `./greeting.js` 对应的模块id，通过id找到对应的模块，调用模块代码将 `exports` 返回，最后打包生成 `main.js` 文件。`bundle()` 方法的完整实现如下：
+现在，我们需要实现模块之间的引用，我们需要实现 `require()` 方法。实现思路是：当调用 `require('./greeting.js')` 时，去mapping里面查找 `./greeting.js` 对应的模块id，通过id找到对应的模块，调用模块代码将 `exports` 返回，最后打包生成 `main.js` 文件。`bundle()` 方法的完整实现如下：
 
 **bundler.js：**
 
@@ -401,4 +401,6 @@ function bundle(graph) {
 
 ![result](http://lc-3Cv4Lgro.cn-n1.lcfile.com/8599de028cf0313f68f6/result.png)
 
-大功告成！
+一个简易版本的Webpack大功告成！
+
+本文源码：https://github.com/MudOnTire/build-your-own-webpack
