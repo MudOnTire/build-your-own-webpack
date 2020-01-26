@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const babel = require('@babel/core');
 const parser = require('@babel/parser');
 const traverse = require('@babel/traverse').default;
 
@@ -38,10 +39,14 @@ function getAsset(filename) {
   const ast = getAST(filename);
   const dependencies = getImports(ast);
   const id = ID++;
+  const { code } = babel.transformFromAstSync(ast, null, {
+    presets: ['@babel/env']
+  });
   return {
     id,
     filename,
-    dependencies
+    dependencies,
+    code
   }
 }
 
@@ -67,7 +72,29 @@ function createGraph(entry) {
   return queue;
 }
 
-console.log(createGraph('./example/entry.js'));
+/**
+ * 打包
+ * @param {Array} graph 依赖关系图
+ */
+function bundle(graph) {
+  let modules = '';
+
+  // 将依赖关系图中模块编译后的代码、模块路径和id的映射关系传入IIFE
+  graph.forEach(mod => {
+    modules += `${mod.id}:[
+      function () { ${mod.code}},
+      ${JSON.stringify(mod.mapping)}
+    ],`
+  })
+
+  return `
+    (function(){})({${modules}})
+  `;
+}
+
+const graph = createGraph('./example/entry.js');
+const bundled = bundle(graph);
+console.log(bundled);
 
 
 

@@ -262,5 +262,93 @@ function createGraph(entry) {
 ![dependency graph](http://lc-3Cv4Lgro.cn-n1.lcfile.com/737e8dc5bfc60a90ab9e/dependency%20graph.png)
 
 
+## 5. 打包
 
+最后，我们需要根据依赖关系图将所有文件打包成一个文件。这一步有几个关键点：
 
+1. 打包后的文件需要能够在浏览器运行，所以代码中的ES6语法需要先被babel编译
+
+1. 浏览器的运行环境中，编译后的代码依然需要实现模块间的引用
+
+1. 合并成一个文件后，不同模块的作用域依然需要保持独立
+
+### (1). 编译源码
+
+首先安装babel并引入；
+
+```
+npm install --save-dev @babel/core
+```
+
+或者yarn：
+
+```
+yarn add @babel/core --dev
+```
+
+**bundler.js：**
+
+```
+const babel = require('@babel/core');
+```
+
+然后对 `getAsset` 方法稍作修改，这里我们使用 `transformFromAstSync()` 方法对生成的抽象语法树进行编译： 
+
+```
+function getAsset(filename) {
+  const ast = getAST(filename);
+  const dependencies = getImports(ast);
+  const id = ID++;
+  // 编译
+  const { code } = babel.transformFromAstSync(ast, null, {
+    presets: ['@babel/env']
+  });
+  return {
+    id,
+    filename,
+    dependencies,
+    code
+  }
+}
+```
+
+源码编译后生成的依赖关系图内容如下：
+
+![compiled](http://lc-3Cv4Lgro.cn-n1.lcfile.com/90cb59c1044b4c3f9bbd/compiled.png)
+
+可以看到编译后的代码中还有 `require('./greeting.js')` 和 `exports["default"]` 这种语法，而浏览器中是不支持 `require`和 `exports` 方法的。所以我们还需要实现模块间的引用功能。
+
+**(2). 模块引用**
+
+首先打包之后的文件内容可以看成一大段字符串，且这段代码需要自己独立的作用域（使用IIFE包裹），以免污染其他JS文件。我们可以先勾勒出打包方法的结构，在**bundler.js**中新增 `bundle` 方法：
+
+**bundler.js：**
+
+```
+/**
+ * 打包
+ * @param {Array} graph 依赖关系图
+ */
+function bundle(graph) {
+  let modules = '';
+
+  // 将依赖关系图中模块编译后的代码、模块路径和id的映射关系传入IIFE
+  graph.forEach(mod => {
+    modules += `${mod.id}:[
+      function () { ${mod.code}},
+      ${JSON.stringify(mod.mapping)}
+    ],`
+  })
+
+  // 
+  return `
+    (function(){})({${modules}})
+  `;
+}
+```
+
+我们先看一下执行 `bundle()` 方法之后的结果（为方便阅读使用 [js-beautify](https://www.npmjs.com/package/js-beautify) 和 [cli-highlight](https://www.npmjs.com/package/cli-highlight) 进行了美化 ）：
+
+![bundled](http://lc-3Cv4Lgro.cn-n1.lcfile.com/9234f4de1df1d65efafb/bundled.png)
+
+接着，我们需要实现模块之间的引用，我们需要手动实现 `require()` 方法。实现思路是：当调用 `require('./greeting.js')` 时，我们去mapping里面查找 `./greeting.js` 对应的模块id，通过id找到对应模块的代码。
