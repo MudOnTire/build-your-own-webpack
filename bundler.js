@@ -88,7 +88,10 @@ function bundle(graph) {
   })
 
   return `
-    (function(){})({${modules}})
+    (function (modules) {
+
+
+    })({${modules}})
   `;
 }
 
