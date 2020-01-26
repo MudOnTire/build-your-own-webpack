@@ -229,7 +229,7 @@ console.log(mainAsset);
 
 ## 4. 生成Dependency Graph
 
-接下来，我们需要写一个方法生成依赖关系图，该方法应该接受入口文件路径作为参数，并返回一个包含所有依赖关系的数组。生成依赖关系图可以通过递归的方式，也可以通过队列的方式，本文使用队列。具体实现如下：
+接下来，我们需要写一个方法生成依赖关系图，该方法应该接受入口文件路径作为参数，并返回一个包含所有依赖关系的数组。生成依赖关系图可以通过递归的方式，也可以通过队列的方式。本文使用队列，原理是不断遍历队列中的asset对象，如果asset对象的dependencies不为空，则继续为每个dependency生成asset并加入队列，并为每个asset增加mapping属性，记录依赖之间的关系。持续这一过程直到queue中的元素被完全遍历。具体实现如下：
 
 **bundler.js**
 
@@ -256,5 +256,11 @@ function createGraph(entry) {
   return queue;
 }
 ```
+
+生成的依赖关系图对象如下：
+
+![dependency graph](http://lc-3Cv4Lgro.cn-n1.lcfile.com/737e8dc5bfc60a90ab9e/dependency%20graph.png)
+
+
 
 
