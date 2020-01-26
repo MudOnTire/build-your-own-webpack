@@ -351,4 +351,53 @@ function bundle(graph) {
 
 ![bundled](http://lc-3Cv4Lgro.cn-n1.lcfile.com/9234f4de1df1d65efafb/bundled.png)
 
-接着，我们需要实现模块之间的引用，我们需要手动实现 `require()` 方法。实现思路是：当调用 `require('./greeting.js')` 时，我们去mapping里面查找 `./greeting.js` 对应的模块id，通过id找到对应模块的代码。
+接着，我们需要实现模块之间的引用，我们需要手动实现 `require()` 方法。实现思路是：当调用 `require('./greeting.js')` 时，去mapping里面查找 `./greeting.js` 对应的模块id，通过id找到对应的模块，调用模块代码将 `exports` 返回，最后打包生成 `main.js` 文件。`bundle()` 方法的完整实现如下：
+
+**bundler.js：**
+
+```
+/**
+ * 打包
+ * @param {Array} graph 依赖关系图
+ */
+function bundle(graph) {
+  let modules = '';
+
+  // 将依赖关系图中模块编译后的代码、模块路径和id的映射关系传入IIFE
+  graph.forEach(mod => {
+    modules += `${mod.id}:[
+      function (require, module, exports) { ${mod.code}},
+      ${JSON.stringify(mod.mapping)}
+    ],`
+  })
+
+  const bundledCode = `
+    (function (modules) {
+
+      function require(id) {
+        const [fn, mapping] = modules[id];
+
+        function localRequire(relPath) {
+          return require(mapping[relPath]);
+        }
+
+        const localModule = { exports : {} };
+        
+        fn(localRequire, localModule, localModule.exports);
+
+        return localModule.exports;
+      }
+
+      require(0);
+
+    })({${modules}})
+  `;
+  fs.writeFileSync('./main.js', bundledCode);
+}
+```
+
+最后，我们在浏览器中运行一下 `main.js` 的内容看一下最后的结果：
+
+![result](http://lc-3Cv4Lgro.cn-n1.lcfile.com/8599de028cf0313f68f6/result.png)
+
+大功告成！

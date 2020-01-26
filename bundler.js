@@ -3,6 +3,8 @@ const path = require('path');
 const babel = require('@babel/core');
 const parser = require('@babel/parser');
 const traverse = require('@babel/traverse').default;
+const beautify = require('js-beautify').js;
+
 
 /**
  * 获取JS源文件的抽象语法树
@@ -82,22 +84,38 @@ function bundle(graph) {
   // 将依赖关系图中模块编译后的代码、模块路径和id的映射关系传入IIFE
   graph.forEach(mod => {
     modules += `${mod.id}:[
-      function () { ${mod.code}},
+      function (require, module, exports) { ${mod.code}},
       ${JSON.stringify(mod.mapping)}
     ],`
   })
 
-  return `
+  const bundledCode = `
     (function (modules) {
 
+      function require(id) {
+        const [fn, mapping] = modules[id];
+
+        function localRequire(relPath) {
+          return require(mapping[relPath]);
+        }
+
+        const localModule = { exports : {} };
+
+        fn(localRequire, localModule, localModule.exports);
+
+        return localModule.exports;
+      }
+
+      require(0);
 
     })({${modules}})
   `;
+  const beautified = beautify(bundledCode, { indent_size: 2, end_with_newline: false, end_with_newline: false });
+  fs.writeFileSync('./main.js', beautified);
 }
 
 const graph = createGraph('./example/entry.js');
-const bundled = bundle(graph);
-console.log(bundled);
+bundle(graph);
 
 
 
