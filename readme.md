@@ -2,11 +2,12 @@
 
 # 什么是bundler
 
-市面上现在有很多bundler，最著名的就是webpack，此外常见的还有 [browserify](http://browserify.org/)，[rollup](http://rollupjs.org)，[parcel](https://parceljs.org/)等。虽然现在的bundler进化出了各种各样的功能，但它们都有一个共同的初衷，就是能让前端开发过程中使用上模块，更好的管理依赖、更好的工程化。
+市面上现在有很多bundler，最著名的就是webpack，此外常见的还有 [browserify](http://browserify.org/)，[rollup](http://rollupjs.org)，[parcel](https://parceljs.org/)等。虽然现在的bundler进化出了各种各样的功能，但它们都有一个共同的初衷，就是能给前端引入模块化的开发方式，更好的管理依赖、更好的工程化。
 
 ## Modules（模块）
 
 目前最常见的模块系统有两种：
+
 [ES6 Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)：
 
 ```
